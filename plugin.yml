@@ -1,0 +1,7 @@
+name: SketchMap
+version: 1.0.3
+main: com.mcplugindev.slipswhitley.sketchmap.SketchMapPlugin
+commands:
+  sketchmap:
+    description: SketchMap Core Command
+    usage: /sketchmap help

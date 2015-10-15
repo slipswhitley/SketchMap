@@ -8,7 +8,6 @@ import com.mcplugindev.slipswhitley.sketchmap.command.SketchMapSubCommand;
 import com.mcplugindev.slipswhitley.sketchmap.map.SketchMap;
 
 public class SubCommandDelete extends SketchMapSubCommand {
-
 	@Override
 	public String getSub() {
 		return "delete";
@@ -30,34 +29,24 @@ public class SubCommandDelete extends SketchMapSubCommand {
 	}
 
 	@Override
-	public void onCommand(CommandSender sender, String[] args, String prefix) {
-		
-		if(args.length != 2) {
-			sender.sendMessage(ChatColor.RED + prefix + "Invalid command Arguments. "
-					+ "Try, \"" + getSyntax() + "\"");
+	public void onCommand(final CommandSender sender, final String[] args, final String prefix) {
+		if (args.length != 2) {
+			sender.sendMessage(
+					ChatColor.RED + prefix + "Invalid command Arguments. " + "Try, \"" + this.getSyntax() + "\"");
 			return;
 		}
-		
-		SketchMap map = SketchMapAPI.getMapByID(args[1]);
-		
-		if(map == null) {
-			sender.sendMessage(ChatColor.RED + prefix + "Could not find Map \"" 
-					+ args[1].toLowerCase() + "\"");
+		final SketchMap map = SketchMapAPI.getMapByID(args[1]);
+		if (map == null) {
+			sender.sendMessage(ChatColor.RED + prefix + "Could not find Map \"" + args[1].toLowerCase() + "\"");
 			return;
 		}
-		
-		
-		if(map.isPublicProtected()) {
+		if (map.isPublicProtected()) {
 			sender.sendMessage(ChatColor.RED + prefix + "An External Plugin has requested that"
 					+ " this map is protected from public access.");
 			return;
 		}
-		
-		String mapID = map.getID();
-		
+		final String mapID = map.getID();
 		map.delete();
 		sender.sendMessage(ChatColor.AQUA + prefix + "Map \"" + mapID + "\" deleted.");
 	}
-
-
 }

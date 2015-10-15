@@ -10,9 +10,7 @@ import org.bukkit.command.CommandSender;
 import com.mcplugindev.slipswhitley.sketchmap.command.SketchMapSubCommand;
 import com.mcplugindev.slipswhitley.sketchmap.map.SketchMap;
 
-
 public class SubCommandList extends SketchMapSubCommand {
-
 	@Override
 	public String getSub() {
 		return "list";
@@ -32,34 +30,24 @@ public class SubCommandList extends SketchMapSubCommand {
 	public String getSyntax() {
 		return "/sketchmap list";
 	}
-	
-	@Override
-	public void onCommand(CommandSender sender, String[] args, String prefix) {
 
+	@Override
+	public void onCommand(final CommandSender sender, final String[] args, final String prefix) {
 		sender.sendMessage(ChatColor.GREEN + "List of SketchMaps loaded!");
-		List<String> maps = new ArrayList<String>();
-		
-		if(SketchMap.getLoadedMaps().isEmpty()) {
+		final List<String> maps = new ArrayList<String>();
+		if (SketchMap.getLoadedMaps().isEmpty()) {
 			sender.sendMessage(ChatColor.RED + prefix + "No maps have been loaded to list.");
 			return;
 		}
-		
-		for(SketchMap map : SketchMap.getLoadedMaps()) {
-			if(map.isPublicProtected()) {
+		for (final SketchMap map : SketchMap.getLoadedMaps()) {
+			if (map.isPublicProtected()) {
 				continue;
 			}
 			maps.add(map.getID());
 		}
-
 		Collections.sort(maps);
-		
-		for(String map : maps) {
-			
-			sender.sendMessage(ChatColor.GREEN + "- " + ChatColor.AQUA + map);
+		for (final String map2 : maps) {
+			sender.sendMessage(ChatColor.GREEN + "- " + ChatColor.AQUA + map2);
 		}
-		
 	}
-	
-
-
 }

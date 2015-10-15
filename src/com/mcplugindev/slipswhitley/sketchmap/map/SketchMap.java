@@ -7,205 +7,149 @@ import java.util.Map;
 import java.util.Set;
 
 import org.bukkit.Bukkit;
+import org.bukkit.map.MapRenderer;
 import org.bukkit.map.MapView;
 
 import com.mcplugindev.slipswhitley.sketchmap.SketchMapUtils;
 import com.mcplugindev.slipswhitley.sketchmap.file.FileManager;
 
 public class SketchMap {
-
 	private BufferedImage image;
 	private String mapID;
 	private Integer xPanes;
 	private Integer yPanes;
 	private Boolean publicProtected;
 	private BaseFormat format;
-	
 	private Map<RelativeLocation, MapView> mapCollection;
 	private FileManager fileManager;
+	private static Set<SketchMap> sketchMaps;
 
-	
-	
-	/**
-	 * 
-	 * Create SketchMap using New Maps
-	 * 
-	 */
-	
-	public SketchMap(BufferedImage image, String mapID, int xPanes, int yPanes, boolean publicProtected , BaseFormat format) {
-		
+	public SketchMap(final BufferedImage image, final String mapID, final int xPanes, final int yPanes,
+			final boolean publicProtected, final BaseFormat format) {
 		this.image = SketchMapUtils.resize(image, xPanes * 128, yPanes * 128);
 		this.mapID = mapID;
 		this.xPanes = xPanes;
 		this.yPanes = yPanes;
 		this.publicProtected = publicProtected;
 		this.format = format;
-		
 		this.mapCollection = new HashMap<RelativeLocation, MapView>();
 		this.fileManager = new FileManager(this);
-
 		getLoadedMaps().add(this);
-		loadSketchMap();
-
-		fileManager.save();
+		this.loadSketchMap();
+		this.fileManager.save();
 	}
 
 	private void loadSketchMap() {
-		for(int x = 0; x < xPanes; x++) {
-			for(int y = 0; y < yPanes; y++) {
-				initMap(x, y, Bukkit.createMap(SketchMapUtils.getDefaultWorld()));
+		for (int x = 0; x < this.xPanes; ++x) {
+			for (int y = 0; y < this.yPanes; ++y) {
+				this.initMap(x, y, Bukkit.createMap(SketchMapUtils.getDefaultWorld()));
 			}
 		}
 	}
-	
-	/**
-	 * 
-	 * Create SketchMap using Specified Maps
-	 * 
-	 */
-	
-	
-	public SketchMap(BufferedImage image, String mapID, int xPanes, int yPanes, boolean publicProtected, 
-			BaseFormat format, Map<Short, RelativeLocation> mapCollection) {
-		
-		
+
+	public SketchMap(final BufferedImage image, final String mapID, final int xPanes, final int yPanes,
+			final boolean publicProtected, final BaseFormat format, final Map<Short, RelativeLocation> mapCollection) {
 		this.image = SketchMapUtils.resize(image, xPanes * 128, yPanes * 128);
 		this.mapID = mapID;
 		this.xPanes = xPanes;
 		this.yPanes = yPanes;
 		this.publicProtected = publicProtected;
 		this.format = format;
-		
 		this.mapCollection = new HashMap<RelativeLocation, MapView>();
 		this.fileManager = new FileManager(this);
-
 		getLoadedMaps().add(this);
-		loadSketchMap(mapCollection);
-		
-		fileManager.save();
+		this.loadSketchMap(mapCollection);
+		this.fileManager.save();
 	}
 
-	private void loadSketchMap(Map<Short, RelativeLocation> mapCollection) {
-		for(Short mapID : mapCollection.keySet()) {
-			RelativeLocation loc = mapCollection.get(mapID);
-			
-			initMap(loc.getX(), loc.getY(), SketchMapUtils.getMapView(mapID));
+	private void loadSketchMap(final Map<Short, RelativeLocation> mapCollection) {
+		for (final Short mapID : mapCollection.keySet()) {
+			final RelativeLocation loc = mapCollection.get(mapID);
+			this.initMap(loc.getX(), loc.getY(), SketchMapUtils.getMapView(mapID));
 		}
 	}
-	
-	/**
-	 * 
-	 * 
-	 * 
-	 */
-	
 
-	private void initMap(int x, int y, MapView mapView) {
-		BufferedImage subImage = image.getSubimage(x * 128, y * 128, 128, 128);
-		mapView.getRenderers().clear();
-		mapView.addRenderer(new ImageRenderer(subImage));
-		
-		mapCollection.put(new RelativeLocation(x, y), mapView);
+	private void initMap(final int x, final int y, final MapView mapView) {
+		final BufferedImage subImage = this.image.getSubimage(x * 128, y * 128, 128, 128);
+		for (final MapRenderer rend : mapView.getRenderers()) {
+			mapView.removeRenderer(rend);
+		}
+		mapView.addRenderer((MapRenderer) new ImageRenderer(subImage));
+		this.mapCollection.put(new RelativeLocation(x, y), mapView);
 	}
-	
-	/**
-	 * 
-	 *  Get Object information
-	 * 
-	 */
-	
-	
+
 	public String getID() {
-		return mapID;
+		return this.mapID;
 	}
-	
-	public BufferedImage getImage() { 
-		return image;
+
+	public BufferedImage getImage() {
+		return this.image;
 	}
-	
+
 	public int getLengthX() {
-		return xPanes;
+		return this.xPanes;
 	}
-	
+
 	public int getLengthY() {
-		return yPanes;
+		return this.yPanes;
 	}
-	
+
 	public boolean isPublicProtected() {
-		return publicProtected;
+		return this.publicProtected;
 	}
-	
+
 	public Map<RelativeLocation, MapView> getMapCollection() {
-		return mapCollection;
+		return this.mapCollection;
 	}
-	
+
 	public BaseFormat getBaseFormat() {
-		return format;
+		return this.format;
 	}
-	
-	
-	/**
-	 * 
-	 * Map Functions
-	 * 
-	 * 
-	 */
 
 	public void delete() {
-		fileManager.deleteFile();
+		this.fileManager.deleteFile();
 		getLoadedMaps().remove(this);
-		
 		try {
 			this.finalize();
-		} catch (Throwable e) {}
-	}
-	
-	public void save() {
-		fileManager.save();
-	}
-	
-	
-	/**
-	 * 
-	 *  Static Methods
-	 * 
-	 */
-	
-	private static Set<SketchMap> sketchMaps;
-	
-	public static Set<SketchMap> getLoadedMaps() {
-		if(sketchMaps == null) {
-			sketchMaps = new HashSet<SketchMap>();
+		} catch (Throwable t) {
 		}
-		
-		return sketchMaps;
 	}
-	
+
+	public void save() {
+		this.fileManager.save();
+	}
+
+	public static Set<SketchMap> getLoadedMaps() {
+		if (SketchMap.sketchMaps == null) {
+			SketchMap.sketchMaps = new HashSet<SketchMap>();
+		}
+		return SketchMap.sketchMaps;
+	}
+
 	public enum BaseFormat {
-		PNG,
-		JPEG;
-		
+		PNG("PNG", 0), JPEG("JPEG", 1);
+
+		private BaseFormat(final String s, final int n) {
+		}
+
 		public String getExtension() {
-			if(this == BaseFormat.PNG) {
+			if (this == BaseFormat.PNG) {
 				return "png";
 			}
-			if(this == BaseFormat.JPEG) {
+			if (this == BaseFormat.JPEG) {
 				return "jpg";
 			}
 			return null;
 		}
-		
-		public static BaseFormat fromExtension(String ext) {
-			if(ext.equalsIgnoreCase("png")) {
+
+		public static BaseFormat fromExtension(final String ext) {
+			if (ext.equalsIgnoreCase("png")) {
 				return BaseFormat.PNG;
-				
 			}
-			if(ext.equalsIgnoreCase("jpg")) {
+			if (ext.equalsIgnoreCase("jpg")) {
 				return BaseFormat.JPEG;
 			}
 			return null;
 		}
 	}
-	
-	
 }

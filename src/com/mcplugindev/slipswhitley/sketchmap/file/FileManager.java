@@ -14,67 +14,56 @@ import com.mcplugindev.slipswhitley.sketchmap.map.RelativeLocation;
 import com.mcplugindev.slipswhitley.sketchmap.map.SketchMap;
 
 public class FileManager {
-
 	private SketchMap sketchMap;
-	
 	private File mapFile;
 	private YamlConfiguration mapConfig;
-	
-	public FileManager(SketchMap sketchMap) {
+
+	public FileManager(final SketchMap sketchMap) {
 		this.sketchMap = sketchMap;
-	
-		mapFile = new File(SketchMapLoader.getMapsDirectory() + "/" + sketchMap.getID() + ".sketchmap");
-		
-		if(!mapFile.exists()) {
+		this.mapFile = new File(SketchMapLoader.getMapsDirectory() + "/" + sketchMap.getID() + ".sketchmap");
+		if (!this.mapFile.exists()) {
 			try {
-				mapFile.createNewFile();
-				mapConfig = YamlConfiguration.loadConfiguration(mapFile);
+				this.mapFile.createNewFile();
+				this.mapConfig = YamlConfiguration.loadConfiguration(this.mapFile);
 			} catch (Exception ex) {
-				Bukkit.getLogger().log(Level.WARNING, 
-						"[SketchMap] Unable to create/load SketchMap file \"" + mapFile.getName() + "\" in SketchMaps folder.", ex);
+				Bukkit.getLogger().log(Level.WARNING, "[SketchMap] Unable to create/load SketchMap file \""
+						+ this.mapFile.getName() + "\" in SketchMaps folder.", ex);
 				return;
-			}	
+			}
 		}
-		
 		try {
-			mapConfig = YamlConfiguration.loadConfiguration(mapFile);
-		}
-		catch (Exception ex) {
-			Bukkit.getLogger().log(Level.WARNING, 
-					"[SketchMap] Unable to load SketchMap file \"" + mapFile.getName() + "\" in SketchMaps folder.", ex);
+			this.mapConfig = YamlConfiguration.loadConfiguration(this.mapFile);
+		} catch (Exception ex) {
+			Bukkit.getLogger().log(Level.WARNING, "[SketchMap] Unable to load SketchMap file \""
+					+ this.mapFile.getName() + "\" in SketchMaps folder.", ex);
 		}
 	}
 
 	public void save() {
-
-		if(mapConfig == null) {
+		if (this.mapConfig == null) {
 			return;
 		}
-		
-		mapConfig.set("x-panes", sketchMap.getLengthX());
-		mapConfig.set("y-panes", sketchMap.getLengthY());
-		mapConfig.set("public-protected", sketchMap.isPublicProtected());
-		
-		List<String> mapCollection = new ArrayList<String>();
-		
-		for(RelativeLocation loc : sketchMap.getMapCollection().keySet()) {
-			mapCollection.add(loc.toString() + " " + SketchMapUtils.getMapID(sketchMap.getMapCollection().get(loc)));
+		this.mapConfig.set("x-panes", (Object) this.sketchMap.getLengthX());
+		this.mapConfig.set("y-panes", (Object) this.sketchMap.getLengthY());
+		this.mapConfig.set("public-protected", (Object) this.sketchMap.isPublicProtected());
+		final List<String> mapCollection = new ArrayList<String>();
+		for (final RelativeLocation loc : this.sketchMap.getMapCollection().keySet()) {
+			mapCollection.add(String.valueOf(loc.toString()) + " "
+					+ SketchMapUtils.getMapID(this.sketchMap.getMapCollection().get(loc)));
 		}
-		
-		mapConfig.set("map-collection", mapCollection);
-		mapConfig.set("base-format", sketchMap.getBaseFormat().toString());
-		mapConfig.set("map-image", SketchMapUtils.imgToBase64String(sketchMap.getImage(), sketchMap.getBaseFormat().getExtension()));
-		
+		this.mapConfig.set("map-collection", (Object) mapCollection);
+		this.mapConfig.set("base-format", (Object) this.sketchMap.getBaseFormat().toString());
+		this.mapConfig.set("map-image", (Object) SketchMapUtils.imgToBase64String(this.sketchMap.getImage(),
+				this.sketchMap.getBaseFormat().getExtension()));
 		try {
-			mapConfig.save(mapFile);
+			this.mapConfig.save(this.mapFile);
 		} catch (IOException e) {
-			Bukkit.getLogger().log(Level.WARNING, 
-					"[SketchMap] Unable to save SketchMap file \"" + mapFile.getName() + "\" in SketchMaps folder.", e);
+			Bukkit.getLogger().log(Level.WARNING, "[SketchMap] Unable to save SketchMap file \""
+					+ this.mapFile.getName() + "\" in SketchMaps folder.", e);
 		}
 	}
 
 	public void deleteFile() {
-		mapFile.delete();
+		this.mapFile.delete();
 	}
-
 }

@@ -9,58 +9,44 @@ import com.mcplugindev.slipswhitley.sketchmap.SketchMapAPI;
 import com.mcplugindev.slipswhitley.sketchmap.SketchMapPlugin;
 
 public class SketchMapLoader {
-
 	private static File mapsDirectory;
 	private static File dataFolder;
-	
+
 	public static File getDataFolder() {
-		if(dataFolder != null) {
-			return dataFolder;
+		if (SketchMapLoader.dataFolder != null) {
+			return SketchMapLoader.dataFolder;
 		}
-		
-		dataFolder = SketchMapPlugin.getPlugin().getDataFolder();
-		
-		if(dataFolder.exists()) {
-			return dataFolder;
+		SketchMapLoader.dataFolder = SketchMapPlugin.getPlugin().getDataFolder();
+		if (SketchMapLoader.dataFolder.exists()) {
+			return SketchMapLoader.dataFolder;
 		}
-		
-		dataFolder.mkdirs();
-		return dataFolder;
+		SketchMapLoader.dataFolder.mkdirs();
+		return SketchMapLoader.dataFolder;
 	}
-	
+
 	public static File getMapsDirectory() {
-		if(mapsDirectory != null) {
-			return mapsDirectory;
+		if (SketchMapLoader.mapsDirectory != null) {
+			return SketchMapLoader.mapsDirectory;
 		}
-		
-		mapsDirectory = new File(getDataFolder().toString() + "/" + "sketchmaps/");
-		
-		if(mapsDirectory.exists()) {
-			return mapsDirectory;
+		SketchMapLoader.mapsDirectory = new File(String.valueOf(getDataFolder().toString()) + "/" + "sketchmaps/");
+		if (SketchMapLoader.mapsDirectory.exists()) {
+			return SketchMapLoader.mapsDirectory;
 		}
-		
-		mapsDirectory.mkdirs();
-		return mapsDirectory;
+		SketchMapLoader.mapsDirectory.mkdirs();
+		return SketchMapLoader.mapsDirectory;
 	}
-	
+
 	public static void loadMaps() {
-		for(File file : getMapsDirectory().listFiles()) {
-			if(!file.getName().endsWith(".sketchmap")) {
-				continue;
+		File[] listFiles;
+		for (int length = (listFiles = getMapsDirectory().listFiles()).length, i = 0; i < length; ++i) {
+			final File file = listFiles[i];
+			if (file.getName().endsWith(".sketchmap")) {
+				try {
+					SketchMapAPI.loadSketchMapFromFile(file);
+				} catch (SketchMapFileException ex) {
+					Bukkit.getLogger().log(Level.WARNING, ex.getMessage(), ex);
+				}
 			}
-			
-			try {
-				SketchMapAPI.loadSketchMapFromFile(file);
-			}
-			catch (SketchMapFileException ex) {
-				Bukkit.getLogger().log(Level.WARNING, ex.getMessage(), ex);
-			}
-			
 		}
 	}
-	
-	
-	
-	
-	
 }

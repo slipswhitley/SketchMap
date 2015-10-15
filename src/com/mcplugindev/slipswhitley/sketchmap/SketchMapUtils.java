@@ -3,16 +3,12 @@ package com.mcplugindev.slipswhitley.sketchmap;
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.image.BufferedImage;
-import java.awt.image.RenderedImage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
+import java.io.OutputStream;
+import java.util.Set;
 
 import javax.imageio.ImageIO;
-
-import net.milkbowl.vault.permission.Permission;
 
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.bukkit.Bukkit;
@@ -23,123 +19,124 @@ import org.bukkit.entity.Player;
 import org.bukkit.map.MapView;
 import org.bukkit.plugin.RegisteredServiceProvider;
 
+import net.milkbowl.vault.permission.Permission;
+import sun.misc.BASE64Decoder;
+import sun.misc.BASE64Encoder;
+
 public class SketchMapUtils {
-
-	/**
-	 * 
-	 * Image Utils
-	 * 
-	 */
-	
-	
-	public static BufferedImage resize(Image img, Integer width, Integer height) {
-		
-		img = img.getScaledInstance(width, height, Image.SCALE_SMOOTH);
-		
-	    if (img instanceof BufferedImage) {
-	        return (BufferedImage) img;
-	    }
-
-	    BufferedImage bimage = new BufferedImage(img.getWidth(null), img.getHeight(null), BufferedImage.TYPE_INT_ARGB);
-
-	    Graphics2D bGr = bimage.createGraphics();
-	    bGr.drawImage(img, 0, 0, null);
-	    bGr.dispose();
-
-	    return bimage;
-	}
-	
-	
-	public static String imgToBase64String(final RenderedImage img, final String formatName) {
-	    final ByteArrayOutputStream os = new ByteArrayOutputStream();
-	    try {
-	        ImageIO.write(img, formatName, Base64.getEncoder().wrap(os));
-	        return os.toString(StandardCharsets.ISO_8859_1.name());
-	    } catch (final IOException ioe) {
-	        throw new UncheckedIOException(ioe);
-	    }
-	}
-
-	public static BufferedImage base64StringToImg(final String base64String) {
-	    try {
-	        return ImageIO.read(new ByteArrayInputStream(Base64.getDecoder().decode(base64String)));
-	    } catch (final IOException ioe) {
-	        throw new UncheckedIOException(ioe);
-	    }
-	}
-	
-	
-	/**
-	 * 
-	 * Permissions / Vault
-	 * 
-	 */
-	
-	
 	private static Permission permission;
-	
-	public static void sendColoredConsoleMessage(String msg) {
-		ConsoleCommandSender sender = Bukkit.getConsoleSender();
+
+	public static BufferedImage resize(Image img, final Integer width, final Integer height) {
+		img = img.getScaledInstance(width, height, 4);
+		if (img instanceof BufferedImage) {
+			return (BufferedImage) img;
+		}
+		final BufferedImage bimage = new BufferedImage(img.getWidth(null), img.getHeight(null), 2);
+		final Graphics2D bGr = bimage.createGraphics();
+		bGr.drawImage(img, 0, 0, null);
+		bGr.dispose();
+		return bimage;
+	}
+
+	public static BufferedImage base64StringToImg(final String imageString) {
+		BufferedImage image = null;
+		try {
+			final BASE64Decoder decoder = new BASE64Decoder();
+			final byte[] imageByte = decoder.decodeBuffer(imageString);
+			final ByteArrayInputStream bis = new ByteArrayInputStream(imageByte);
+			image = ImageIO.read(bis);
+			bis.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return image;
+	}
+
+	public static String imgToBase64String(final BufferedImage image, final String type) {
+		String imageString = null;
+		final ByteArrayOutputStream bos = new ByteArrayOutputStream();
+		try {
+			ImageIO.write(image, type, bos);
+			final byte[] imageBytes = bos.toByteArray();
+			final BASE64Encoder encoder = new BASE64Encoder();
+			imageString = encoder.encode(imageBytes);
+			bos.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return imageString;
+	}
+
+	public static void sendColoredConsoleMessage(final String msg) {
+		final ConsoleCommandSender sender = Bukkit.getConsoleSender();
 		sender.sendMessage(msg);
 	}
-	
+
 	protected static boolean setupPermissions() {
-        RegisteredServiceProvider<Permission> permissionProvider = Bukkit.getServicesManager()
-        		.getRegistration(net.milkbowl.vault.permission.Permission.class);
-        
-        if (permissionProvider != null) {
-            permission = permissionProvider.getProvider();
-        }
-        
-        return (permission != null);
-    }
-	
-	
-	public static boolean hasPermission(Player player, String permission) {
-		if(permission == null) {
+		final RegisteredServiceProvider<Permission> permissionProvider = (RegisteredServiceProvider<Permission>) Bukkit
+				.getServicesManager().getRegistration((Class) Permission.class);
+		if (permissionProvider != null) {
+			SketchMapUtils.permission = permissionProvider.getProvider();
+		}
+		return SketchMapUtils.permission != null;
+	}
+
+	public static boolean hasPermission(final Player player, final String permission) {
+		if (permission == null) {
 			return player.isOp();
 		}
-		
 		return SketchMapUtils.permission.playerHas(player, permission);
 	}
 
-	
-
-	/**
-	 * Deprecated Methods Here :'c
+	/** Returns 0 if the map size is lower than the player's limit
+	 Returns a positive number if the map is larger than the player's limit
+	 This number will be the player's limit (config or perms as applicable)
 	 */
-	
-	@SuppressWarnings("deprecation")
-	public static short getMapID(MapView map) {
+	public static int checkSizeLimits(Player player, int x, int y)
+	{
+        if (player.isOp())
+            return 0;
+
+		int largerDimension = Math.max(x,y);
+		if (hasPermission(player, "sketchmap.size.defaultexempt"))
+		{
+			for (int i = 1; i < largerDimension; i++)
+			{
+				if (hasPermission(player, "sketchmap.size." + i))
+				{
+					return i;
+				}
+			}
+		}
+		else
+		{
+			int maxDim = SketchMapPlugin.getMaxDimension();
+			if (largerDimension > maxDim)
+			{
+				return maxDim;
+			}
+		}
+
+		return 0;
+	}
+
+	public static short getMapID(final MapView map) {
 		return map.getId();
 	}
-	
-	@SuppressWarnings("deprecation")
-	public static MapView getMapView(short id) {
-		MapView map = Bukkit.getMap(id);
-		if(map != null) {
+
+	public static MapView getMapView(final short id) {
+		final MapView map = Bukkit.getMap(id);
+		if (map != null) {
 			return map;
 		}
-		
 		return Bukkit.createMap(getDefaultWorld());
 	}
-	
-	@SuppressWarnings("deprecation")
-	public static Block getTargetBlock(Player player, int i) {
-		return player.getTargetBlock(null, i);
+
+	public static Block getTargetBlock(final Player player, final int i) {
+		return player.getTargetBlock((Set) null, i);
 	}
-	
-	
-	/**
-	 * 
-	 */
-	
 
 	public static World getDefaultWorld() {
 		return Bukkit.getWorlds().get(0);
 	}
-
-
-	
-	
 }

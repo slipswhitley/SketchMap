@@ -13,22 +13,21 @@ import com.mcplugindev.slipswhitley.sketchmap.command.sub.SubCommandImport;
 import com.mcplugindev.slipswhitley.sketchmap.command.sub.SubCommandList;
 import com.mcplugindev.slipswhitley.sketchmap.command.sub.SubCommandPlace;
 
-
 public abstract class SketchMapSubCommand {
-
 	private static List<SketchMapSubCommand> commands;
-	
-	public abstract String getSub();
-	public abstract String getPermission();
-	public abstract String getDescription();
-	public abstract String getSyntax();
-	
-	public abstract void onCommand(CommandSender sender, 
-			String[] args, String prefix );
-	
-	public static void loadCommands() {
-		commands = new ArrayList<SketchMapSubCommand>();
 
+	public abstract String getSub();
+
+	public abstract String getPermission();
+
+	public abstract String getDescription();
+
+	public abstract String getSyntax();
+
+	public abstract void onCommand(final CommandSender p0, final String[] p1, final String p2);
+
+	public static void loadCommands() {
+		SketchMapSubCommand.commands = new ArrayList<SketchMapSubCommand>();
 		loadCommand(new SubCommandCreate());
 		loadCommand(new SubCommandDelete());
 		loadCommand(new SubCommandGet());
@@ -36,15 +35,13 @@ public abstract class SketchMapSubCommand {
 		loadCommand(new SubCommandImport());
 		loadCommand(new SubCommandList());
 		loadCommand(new SubCommandPlace());
-		
 	}
-	
-	private static void loadCommand(SketchMapSubCommand sub) {
-		commands.add(sub);
+
+	private static void loadCommand(final SketchMapSubCommand sub) {
+		SketchMapSubCommand.commands.add(sub);
 	}
-	
+
 	public static List<SketchMapSubCommand> getCommands() {
-		return commands;
+		return SketchMapSubCommand.commands;
 	}
 }
-	
