@@ -107,11 +107,6 @@ public class SketchMapAPI {
 		
 		
 		Boolean publicProtected = config.getBoolean("public-protected");
-		if(publicProtected == null) {
-			throw new SketchMapFileException("Unable to load SketchMap file \"" + file.getName() 
-					+ "\" invalid field \"public-protected\"");
-		}
-		
 		List<String> mapList = config.getStringList("map-collection");
 		if(mapList == null) {
 			throw new SketchMapFileException("Unable to load SketchMap file \"" + file.getName() 

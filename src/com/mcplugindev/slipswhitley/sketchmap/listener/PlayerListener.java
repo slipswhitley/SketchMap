@@ -8,6 +8,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
@@ -19,8 +20,11 @@ public class PlayerListener implements Listener {
 			return;
 		}
 		
+		// 1.9 - Only use main hand
+		if (event.getHand() != EquipmentSlot.HAND) return;
+		
 		ItemFrame iFrame = (ItemFrame) event.getRightClicked();
-		ItemStack iHand = event.getPlayer().getItemInHand();
+		ItemStack iHand = event.getPlayer().getInventory().getItemInMainHand();
 		
 		if(iHand.getType() != Material.MAP) {
 			return;
@@ -58,12 +62,11 @@ public class PlayerListener implements Listener {
 		}
 		
 		if(iHand.getAmount() == 1) {
-			player.getInventory().setItemInHand(new ItemStack(Material.AIR));
+			player.getInventory().setItemInMainHand(new ItemStack(Material.AIR));
 			return;
 		}
 		
 		iHand.setAmount(iHand.getAmount() - 1);
-		
-		
+
 	}
 }
