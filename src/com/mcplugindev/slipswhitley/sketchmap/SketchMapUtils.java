@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.Set;
 
 import javax.imageio.ImageIO;
 
@@ -16,6 +17,7 @@ import net.milkbowl.vault.permission.Permission;
 
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.command.ConsoleCommandSender;
@@ -124,9 +126,8 @@ public class SketchMapUtils {
 		return Bukkit.createMap(getDefaultWorld());
 	}
 	
-	@SuppressWarnings("deprecation")
 	public static Block getTargetBlock(Player player, int i) {
-		return player.getTargetBlock(null, i);
+		return player.getTargetBlock((Set<Material>) null, i);
 	}
 	
 	
