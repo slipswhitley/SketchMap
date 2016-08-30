@@ -1,211 +1,220 @@
 package com.mcplugindev.slipswhitley.sketchmap.map;
 
-import java.awt.image.BufferedImage;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-
+import com.mcplugindev.slipswhitley.sketchmap.SketchMapUtils;
+import com.mcplugindev.slipswhitley.sketchmap.file.FileManager;
 import org.bukkit.Bukkit;
 import org.bukkit.map.MapView;
 
-import com.mcplugindev.slipswhitley.sketchmap.SketchMapUtils;
-import com.mcplugindev.slipswhitley.sketchmap.file.FileManager;
+import java.awt.image.BufferedImage;
+import java.util.*;
 
-public class SketchMap {
+public class SketchMap
+{
+    private final BufferedImage image;
+    private final String mapID;
+    private UUID ownerUUID;
+    private PrivacyLevel privacyLevel;
+    private List<UUID> allowedUUID;
+    private final Integer xPanes;
+    private final Integer yPanes;
+    private Boolean publicProtected;
+    private final BaseFormat format;
+    private final Map<RelativeLocation, MapView> mapCollection;
+    private final FileManager fileManager;
+    private static Set<SketchMap> sketchMaps;
 
-	private BufferedImage image;
-	private String mapID;
-	private Integer xPanes;
-	private Integer yPanes;
-	private Boolean publicProtected;
-	private BaseFormat format;
-	
-	private Map<RelativeLocation, MapView> mapCollection;
-	private FileManager fileManager;
+    public SketchMap(final BufferedImage image, final String mapID, final UUID ownerUUID, final PrivacyLevel privacyLevel, final int xPanes, final int yPanes,
+                     final boolean publicProtected, final BaseFormat format)
+    {
+        this.image = SketchMapUtils.resize(image, xPanes * 128, yPanes * 128);
+        this.mapID = mapID;
+        this.ownerUUID = ownerUUID;
+        this.privacyLevel = privacyLevel;
+        this.allowedUUID = new ArrayList<>();
+        this.xPanes = xPanes;
+        this.yPanes = yPanes;
+        this.publicProtected = publicProtected;
+        this.format = format;
+        this.mapCollection = new HashMap<>();
+        this.fileManager = new FileManager(this);
+        getLoadedMaps().add(this);
+        this.loadSketchMap();
+        save();
+    }
 
-	
-	
-	/**
-	 * 
-	 * Create SketchMap using New Maps
-	 * 
-	 */
-	
-	public SketchMap(BufferedImage image, String mapID, int xPanes, int yPanes, boolean publicProtected , BaseFormat format) {
-		
-		this.image = SketchMapUtils.resize(image, xPanes * 128, yPanes * 128);
-		this.mapID = mapID;
-		this.xPanes = xPanes;
-		this.yPanes = yPanes;
-		this.publicProtected = publicProtected;
-		this.format = format;
-		
-		this.mapCollection = new HashMap<RelativeLocation, MapView>();
-		this.fileManager = new FileManager(this);
+    private void loadSketchMap()
+    {
+        for (int x = 0; x < this.xPanes; ++x)
+        {
+            for (int y = 0; y < this.yPanes; ++y)
+            {
+                this.initMap(x, y, Bukkit.createMap(SketchMapUtils.getDefaultWorld()));
+            }
+        }
+    }
 
-		getLoadedMaps().add(this);
-		loadSketchMap();
+    public SketchMap(final BufferedImage image, final String mapID, final UUID ownerUUID, final PrivacyLevel privacyLevel, final List<UUID> allowedUUID, final int xPanes, final int yPanes,
+                     final boolean publicProtected, final BaseFormat format, final Map<Short, RelativeLocation> mapCollection)
+    {
+        this.image = SketchMapUtils.resize(image, xPanes * 128, yPanes * 128);
+        this.mapID = mapID;
+        this.ownerUUID = ownerUUID;
+        this.privacyLevel = privacyLevel;
+        this.allowedUUID = allowedUUID;
+        this.xPanes = xPanes;
+        this.yPanes = yPanes;
+        this.publicProtected = publicProtected;
+        this.format = format;
+        this.mapCollection = new HashMap<>();
+        this.fileManager = new FileManager(this);
+        getLoadedMaps().add(this);
+        this.loadSketchMap(mapCollection);
+        save();
+    }
 
-		fileManager.save();
-	}
+    private void loadSketchMap(final Map<Short, RelativeLocation> mapCollection)
+    {
+        for (final Short mapID : mapCollection.keySet())
+        {
+            final RelativeLocation loc = mapCollection.get(mapID);
+            this.initMap(loc.getX(), loc.getY(), SketchMapUtils.getMapView(mapID));
+        }
+    }
 
-	private void loadSketchMap() {
-		for(int x = 0; x < xPanes; x++) {
-			for(int y = 0; y < yPanes; y++) {
-				initMap(x, y, Bukkit.createMap(SketchMapUtils.getDefaultWorld()));
-			}
-		}
-	}
-	
-	/**
-	 * 
-	 * Create SketchMap using Specified Maps
-	 * 
-	 */
-	
-	
-	public SketchMap(BufferedImage image, String mapID, int xPanes, int yPanes, boolean publicProtected, 
-			BaseFormat format, Map<Short, RelativeLocation> mapCollection) {
-		
-		
-		this.image = SketchMapUtils.resize(image, xPanes * 128, yPanes * 128);
-		this.mapID = mapID;
-		this.xPanes = xPanes;
-		this.yPanes = yPanes;
-		this.publicProtected = publicProtected;
-		this.format = format;
-		
-		this.mapCollection = new HashMap<RelativeLocation, MapView>();
-		this.fileManager = new FileManager(this);
+    private void initMap(final int x, final int y, final MapView mapView)
+    {
+        final BufferedImage subImage = this.image.getSubimage(x * 128, y * 128, 128, 128);
+        mapView.getRenderers().stream().forEach(mapRenderer -> mapView.removeRenderer(mapRenderer));
+        mapView.addRenderer(new ImageRenderer(subImage));
+        this.mapCollection.put(new RelativeLocation(x, y), mapView);
+    }
 
-		getLoadedMaps().add(this);
-		loadSketchMap(mapCollection);
-		
-		fileManager.save();
-	}
+    public String getID()
+    {
+        return this.mapID;
+    }
 
-	private void loadSketchMap(Map<Short, RelativeLocation> mapCollection) {
-		for(Short mapID : mapCollection.keySet()) {
-			RelativeLocation loc = mapCollection.get(mapID);
-			
-			initMap(loc.getX(), loc.getY(), SketchMapUtils.getMapView(mapID));
-		}
-	}
-	
-	/**
-	 * 
-	 * 
-	 * 
-	 */
-	
+    public UUID getOwnerUUID()
+    {
+        return this.ownerUUID;
+    }
 
-	private void initMap(int x, int y, MapView mapView) {
-		BufferedImage subImage = image.getSubimage(x * 128, y * 128, 128, 128);
-		mapView.getRenderers().clear();
-		mapView.addRenderer(new ImageRenderer(subImage));
-		
-		mapCollection.put(new RelativeLocation(x, y), mapView);
-	}
-	
-	/**
-	 * 
-	 *  Get Object information
-	 * 
-	 */
-	
-	
-	public String getID() {
-		return mapID;
-	}
-	
-	public BufferedImage getImage() { 
-		return image;
-	}
-	
-	public int getLengthX() {
-		return xPanes;
-	}
-	
-	public int getLengthY() {
-		return yPanes;
-	}
-	
-	public boolean isPublicProtected() {
-		return publicProtected;
-	}
-	
-	public Map<RelativeLocation, MapView> getMapCollection() {
-		return mapCollection;
-	}
-	
-	public BaseFormat getBaseFormat() {
-		return format;
-	}
-	
-	
-	/**
-	 * 
-	 * Map Functions
-	 * 
-	 * 
-	 */
+    public void setOwnerUUID(UUID newOwnerUUID)
+    {
+        this.ownerUUID = newOwnerUUID;
+    }
 
-	public void delete() {
-		fileManager.deleteFile();
-		getLoadedMaps().remove(this);
-		
-		try {
-			this.finalize();
-		} catch (Throwable e) {}
-	}
-	
-	public void save() {
-		fileManager.save();
-	}
-	
-	
-	/**
-	 * 
-	 *  Static Methods
-	 * 
-	 */
-	
-	private static Set<SketchMap> sketchMaps;
-	
-	public static Set<SketchMap> getLoadedMaps() {
-		if(sketchMaps == null) {
-			sketchMaps = new HashSet<SketchMap>();
-		}
-		
-		return sketchMaps;
-	}
-	
-	public enum BaseFormat {
-		PNG,
-		JPEG;
-		
-		public String getExtension() {
-			if(this == BaseFormat.PNG) {
-				return "png";
-			}
-			if(this == BaseFormat.JPEG) {
-				return "jpg";
-			}
-			return null;
-		}
-		
-		public static BaseFormat fromExtension(String ext) {
-			if(ext.equalsIgnoreCase("png")) {
-				return BaseFormat.PNG;
-				
-			}
-			if(ext.equalsIgnoreCase("jpg")) {
-				return BaseFormat.JPEG;
-			}
-			return null;
-		}
-	}
-	
-	
+    public PrivacyLevel getPrivacyLevel()
+    {
+        return this.privacyLevel;
+    }
+
+    public void setPrivacyLevel(PrivacyLevel privacyLevel)
+    {
+        this.privacyLevel = privacyLevel;
+    }
+
+    public List<UUID> getAllowedUUID()
+    {
+        return this.allowedUUID;
+    }
+
+    /**
+     * You are responsible for checking whether the UUID is already in the list before adding it!
+     */
+    public void addAllowedUUID(UUID toAdd)
+    {
+        this.allowedUUID.add(toAdd);
+    }
+
+    /**
+     * You are responsible for checking whether the UUID is actually in the list before removing it!
+     */
+    public void removeAllowedUUID(UUID toRemove)
+    {
+        this.allowedUUID.remove(toRemove);
+    }
+
+    public BufferedImage getImage()
+    {
+        return this.image;
+    }
+
+    public int getLengthX()
+    {
+        return this.xPanes;
+    }
+
+    public int getLengthY()
+    {
+        return this.yPanes;
+    }
+
+    public boolean isPublicProtected()
+    {
+        return this.publicProtected;
+    }
+
+    public Map<RelativeLocation, MapView> getMapCollection()
+    {
+        return this.mapCollection;
+    }
+
+    public BaseFormat getBaseFormat()
+    {
+        return this.format;
+    }
+
+    public void delete()
+    {
+        this.fileManager.deleteFile();
+        getLoadedMaps().remove(this);
+    }
+
+    public void save()
+    {
+        this.fileManager.save();
+    }
+
+    public static Set<SketchMap> getLoadedMaps()
+    {
+        if (SketchMap.sketchMaps == null)
+        {
+            SketchMap.sketchMaps = new HashSet<>();
+        }
+        return SketchMap.sketchMaps;
+    }
+
+    public static void disable()
+    {
+        SketchMap.sketchMaps = null;
+    }
+
+    public enum BaseFormat
+    {
+        PNG, JPEG;
+
+        public String getExtension()
+        {
+            if (this == BaseFormat.PNG)
+                return "png";
+            if (this == BaseFormat.JPEG)
+                return "jpg";
+            return null;
+        }
+
+        public static BaseFormat fromExtension(final String ext)
+        {
+            if (ext.equalsIgnoreCase("png"))
+                return BaseFormat.PNG;
+            if (ext.equalsIgnoreCase("jpg") || ext.equalsIgnoreCase("peg"))
+                return BaseFormat.JPEG;
+            return null;
+        }
+    }
+
+    public enum PrivacyLevel
+    {
+        PUBLIC, PRIVATE
+    }
 }
