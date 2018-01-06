@@ -1,0 +1,7 @@
+name: SketchMap
+version: 3.3
+main: io.github.ebaldino.SketchMap.SketchMapPlugin
+commands:
+  sketchmap:
+    description: SketchMap Core Command
+    usage: /sketchmap help
