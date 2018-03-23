@@ -45,3 +45,5 @@ Temporary Items
 SketchMap-FULL.iml
 SketchMap/SketchMap.iml
 target/
+.classpath
+.project
