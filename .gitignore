@@ -41,3 +41,10 @@ $RECYCLE.BIN/
 Network Trash Folder
 Temporary Items
 .apdisk
+.idea/**
+SketchMap-FULL.iml
+SketchMap/SketchMap.iml
+target/
+.classpath
+.project
+.settings

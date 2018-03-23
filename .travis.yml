@@ -1,0 +1,19 @@
+language: java
+jdk:
+- oraclejdk8
+sudo: false
+addons:
+  apt:
+    packages:
+    - oracle-java8-installer
+deploy:
+  provider: releases
+  api_key:
+    secure: n9m/falG9fjo2HyQv/4Tiy13sWG+zXSySt4pE1MHXkTMuyR3SqCKoKcSwNVpgCkF5dnZpCiWAd19JSkjUUDDoE5vVTqFC8yB4cO8IIdF7Z0gowOA5Pgs7idSFGrut8o/gUCJdHLoHE2tNQlKcTWXNWaEke9mqmCFiEbhy1Dak62qd0mS90il/9r4fmVcXlPT/COayBbLqFcVZQg7ppVhexoBWjy8VO7UYrl1xmiWu8aM4fO4gta38/5h7T6b3hfRKHJN3hJ4nnMwW0F26d0k2K3OYzojkWlY6i5xwxTIwDhGaXID89slUkAfQZ4At9yMsCbI+dj7jc2uz791AUookWTxcMhZ01O7y3dCRRSMOQ7CCnJftJ1Wx9BntyTGPP5H4144LtD8+kzf5A/jr0mcEYvALo6gfMjJ22XI7NnPk6dRpHoP3A8v5/m0Za+DfcmezBTfXDDMB2afzVVAdDaK1WbfFZeR8GRB5DfOqL9oEidxp3QZejKLAHRUCYATIqAWSRinyBNH+5aJTk8t2/++TurDpSOGCKuO986VoNe0bOX6TYIweKYC3b9vSQkCL3eD6px0lr3xvTaV3RvrVm1QXPVVwX89IIHgyTzCOLyZVwaBXdUqjTuLjqU2wAGlV/z1/lktixfkqaIxfX87BdxtvRPPl6xEgvnNYaxvHK4kGSk=
+  file:
+  - "./target/SketchMap.jar"
+  skip_cleanup: true
+  overwrite: true
+  on:
+    tags: true
+    repo: Craftstuebchen/SketchMap
