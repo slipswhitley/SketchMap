@@ -47,3 +47,4 @@ SketchMap/SketchMap.iml
 target/
 .classpath
 .project
+.settings
